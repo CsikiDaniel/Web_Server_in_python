@@ -1,4 +1,4 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import cgi
 
 
@@ -37,21 +37,26 @@ class RequestHandler(BaseHTTPRequestHandler):
                 fields = cgi.parse_multipart(self.rfile, pdict)
                 first_name = fields.get('first_name')
                 last_name = fields.get('last_name')
-                print(first_name[0], last_name[0])
+                sex = fields.get('sex')
+                working = fields.get('working')
+
+                print(first_name[0], last_name[0], sex[0], working[0])
 
             self.send_response(200)
             self.send_header('content-type', 'text/html')
             self.end_headers()
 
 
+def running_server(request_handler, server_address):
+    while True:
+        http_server = ThreadingHTTPServer(server_address, request_handler)
+        print('Server is running...')
+        http_server.serve_forever()
+        try:
+            http_server.serve_forever()
+        except KeyboardInterrupt:
+            http_server.server_close()
+
+
 server_address = ('localhost', 8080)
-http_server = HTTPServer(server_address, RequestHandler)
-
-print('http server is running...')
-
-http_server.serve_forever()
-try:
-    http_server.serve_forever()
-except KeyboardInterrupt:
-    pass
-http_server.server_close()
+running_server(RequestHandler, server_address)
